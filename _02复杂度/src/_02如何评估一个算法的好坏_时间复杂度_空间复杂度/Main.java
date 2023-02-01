@@ -28,7 +28,7 @@ public class Main {
 		 * 复杂度是算法好坏的主要评价标准，无论时间复杂度还是空间复杂度都可以用大O表示法来表示。
 		 * 
 		 * 参考：
-		 * 1、时间复杂度和空间复杂度介绍：https://baijiahao.baidu.com/s?id=1662190834355918541&wfr=spider&for=pc
+		 * 时间复杂度和空间复杂度介绍：https://baijiahao.baidu.com/s?id=1662190834355918541&wfr=spider&for=pc
 		 */
 	}
 }
