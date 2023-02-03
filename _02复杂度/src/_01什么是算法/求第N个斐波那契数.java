@@ -112,12 +112,11 @@ public class 求第N个斐波那契数 {
 		long sencond = 1;
 
 		for (int i = 0; i < n - 1; i++) {
-			// 求出最新的一个斐波那契数
-			long sum = sencond + first;
+			// 第一个数 + 第二个数 = 就是最新的一个斐波那契数，并赋值给第二个数————即下一次相加时第二个数
+			sencond = sencond + first;
 			
-			// 然后把刚才的第二个数作为下一次相加的第一个数，把最新的一个斐波那契数作为第二个数，去求下一个斐波那契数
-			first = sencond;
-			sencond = sum;
+			// 然后把刚才的第二个数赋值给第一个数————即下一次相加时第一个数，但是second现在已经加了first了，所以刚才的第二个数应该是现在的second减去first
+			first = sencond - first;
 		}
 		
 		// 当这样加完后，第N个斐波那契数就落在了sencond上
