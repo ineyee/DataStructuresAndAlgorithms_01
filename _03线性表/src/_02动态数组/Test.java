@@ -16,6 +16,7 @@ public class Test {
 		arrayList2.add(22);
 		arrayList2.add(33);
 		arrayList2.add(11);
+		arrayList2.get(-1);
 		System.out.println(arrayList.toString());
 	}
 }
