@@ -1,7 +1,9 @@
 package _02动态数组;
 
 /**
- * 一个只能存储整型的动态数组
+ * 整型动态数组，特点：
+ * 1、可以存储Integer类型 = int类型 + null
+ * 2、元素有序
  * 
  * Java里一共有4个级别的访问权限，从高到低依次是：
  * 1、public：在项目里的任何地方————即在项目里的所有包中都能访问
@@ -21,7 +23,7 @@ public class _02IntegerArrayList {
 	 * 比方说这个类内部使用的私有常量，在其它语言里我们也许可以定义在这个文件的
 	 * 头部，不一定非要定义在类内部，但在Java里就不行
 	 * 
-	 * 2、按照Java官方的规范，常量是写在类的最上面的，然后是属性，然后是构造方法，然后是方法
+	 * 2、按照Java官方的规范，常量是写在类的最上面的，然后是属性，然后是构造方法，然后是公开方法、私有方法
 	 * 
 	 * 3、因为是常量嘛，所以内存中只有一份就可以了，所以在Java里定义常量总是static final连用
 	 * 
@@ -70,7 +72,19 @@ public class _02IntegerArrayList {
 	 * @param element
 	 */
 	public void add(Integer element) {
+		/*
+		 * 暂时不考虑数组扩容问题
+		 * 
+		 * 这两行代码虽然能实现效果，但从代码复用的角度考虑
+		 * 方法重载的若干方法之间，参数少的那个方法可以通过调用参数多的那个方法来实现
+		 */
+//		elements[size] = element;
+//		size++;
 		
+		/*
+		 * 所以这里我们修改为调用void add(int index, Integer element)方法来实现
+		 */
+		add(size, element);
 	};
 	
 	/**
@@ -79,15 +93,47 @@ public class _02IntegerArrayList {
 	 * @param element
 	 */
 	public void add(int index, Integer element) {
+		if (index < 0 || index >= size) {
+			throw new IndexOutOfBoundsException("index: " + index + ", size: " + size);
+		}
 		
+		/*
+		 * 暂时不考虑扩容问题
+		 * 
+		 * 添加元素到指定的位置其实就是把index到size - 1这几个元素依次往后移动一位
+		 * 然后再把element放到index的位置
+		 * 
+		 * 但是这个操作得从尾部往前面倒着来移，不然后面的元素可能被覆盖掉
+		 */
+		for (int i = size - 1; i <= index; i--) {
+			elements[i - 1] = elements[i];
+		}
+		elements[index] = element;
+		size++;
 	};
 	
 	/**
-	 * 删除第一个匹配到的元素
+	 * 删除一个元素，第一个匹配到
 	 * @param element
 	 */
 	public void remove(Integer element) {
-		
+		/*
+		 * 删除一个元素其实就是把这个元素的index + 1到size - 1这几个元素依次往前移动一位，
+		 * 让index + 1这个元素覆盖掉这个元素就可以了
+		 * 
+		 * 至于移动后最后一个元素肯定还保留的是原来的值，那我们需不需要把它置为null呢？可以但没必要，
+		 * 因为所有的元素前移后，我们肯定会让size--，那外界其实就访问不到那个保留原来值的最后一个元素了，
+		 * 所以那块内存保留原来的数据也不会出现数据错乱，如果我们把这块内存置为null，反而增加了对内存的操作，
+		 * 性能上反而会下降，还不如放着不管它
+		 * 
+		 * 有了这个思路，我们发现得首先找到这个元素所在的index，然后再做操作，所以这个好像转化为了对
+		 * int indexOf(Integer element)和Integer remove(int index)这两个方法的调用了
+		 * 因此我们先去实现Integer remove(int index)这个方法
+		 */
+		int index = indexOf(element);
+		if (index != ELEMENT_NOT_FOUND) {
+			remove(index);
+		}
 	};
 	
 	/**
@@ -96,7 +142,19 @@ public class _02IntegerArrayList {
 	 * @return 删除掉的元素
 	 */
 	public Integer remove(int index) {
-		return 0;
+		if (index < 0 || index >= size) {
+			throw new IndexOutOfBoundsException("index: " + index + ", size: " + size);
+		}
+		
+		/*
+		 * 思路见void remove(Integer element)这个方法里的描述
+		 */
+		Integer old = elements[index];
+		for (int i = index; i < size - 1; i++) {
+			elements[index] = elements[index + 1];
+		}
+		size--;
+		return old;
 	};
 	
 	/**
@@ -110,6 +168,10 @@ public class _02IntegerArrayList {
 			throw new IndexOutOfBoundsException("index: " + index + ", size: " + size);
 		}
 		
+		/*
+		 * 基本数组可以通过index直接覆盖掉指定位置的元素，
+		 * 所以直接根据index修改就可以了
+		 */
 		Integer old = elements[index];
 		elements[index] = element;
 		return old;
@@ -124,6 +186,11 @@ public class _02IntegerArrayList {
 		if (index < 0 || index >= size) {
 			throw new IndexOutOfBoundsException("index: " + index + ", size: " + size);
 		}
+		
+		/*
+		 * 基本数组可以通过index直接获取指定位置的元素，
+		 * 所以直接根据index获取就可以了
+		 */
 		return elements[index];
 	};
 	
@@ -136,7 +203,7 @@ public class _02IntegerArrayList {
 	};
 	
 	/**
-	 * 获取一个元素的index
+	 * 获取一个元素的index，第一个匹配到
 	 * @param element
 	 * @return
 	 */
@@ -153,7 +220,10 @@ public class _02IntegerArrayList {
 	 * 清空数组
 	 */
 	public void clear() {
-		
+		/*
+		 * 直接把size赋值成0就可以了，虽然浪费了点内存空间，但是省了频繁操作内存的时间
+		 */
+		size = 0;
 	};
 	 
 	/**
