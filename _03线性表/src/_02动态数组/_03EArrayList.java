@@ -26,6 +26,13 @@ package _02动态数组;
  * 就不建议空间换时间了，还是要把基本数组里的元素都置位null以便那些对象都能顺利释放内存。remove也是同理，我们只需要把最后一个元素
  * 置为null既可以了。
  * 
+ * 4、==和equals的区别
+ * ==一般用来比较两个基本数据类型的数据是否相等，它用在对象类型时是判断两个对象的内存地址是否一样，这可能并不符合我们的预期，比如
+ * 我们创建了两个person对象，person1和person2所有的数据都是一样的，那我们就应该把它们判定为相等，但是用==来判断它们可不相等，因为
+ * 它们是堆区两块不同的内存，因此建议对象用equals方法来判断相等不相等，而且我们可以在Person类里重写equals方法来自定义相等的条件，
+ * 所以indexOf方法里的判断要改一改，不能：elements[i] == element这么写了，而是改成：elements[i].equals(element)，但是我们
+ * 上面设计数组里可以存储null，那如果elements[i] == null，调用equals方法不就崩了嘛，因此还得做一些健壮性处理
+ * 
  * @author yiyi
  *
  * @param <E>
@@ -215,11 +222,20 @@ public class _03EArrayList<E> {
 	 * @return
 	 */
 	public int indexOf(E element) {
-		for (int i = 0; i < size; i++) {
-			if (elements[i] == element) {
-				return i;
+		if (element == null) { // 外界想找数组里null的下标
+			for (int i = 0; i < size; i++) {				
+				if (elements[i] == null) {
+					return i;
+				}
+			}
+		} else { // 正常查找
+			for (int i = 0; i < size; i++) {				
+				if (element.equals(elements[i])) {
+					return i;
+				}
 			}
 		}
+		
 		return ELEMENT_NOT_FOUND;
 	};
 	
