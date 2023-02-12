@@ -1,23 +1,22 @@
 package _02动态数组;
 
 /**
- * 整型动态数组，特点：
- * 1、可以存储Integer类型 = int类型 + null
- * 2、元素有序
+ * 前面的整型动态数组已经实现得差不多了，现在我们把那个整型动态数组扩展为泛型类型动态数组——即任意类型动态数组，
+ * 要把这个类搞成一个泛型类，泛型的名字我们不取T而取为E，代表动态数组内部element的类型，先用E把Integer替了再说。
+ * 替换了之后，需要修改的地方如下：
  * 
- * Java里一共有4个级别的访问权限，从高到低依次是：
- * 1、public：在项目里的任何地方————即在项目里的所有包中都能访问
- * 2、protected：在自己的包中能访问 + 子类中能访问（因为子类可能跟父类不在同一个包里）
- * 3、无修饰符（默认为包私有权限package-private）：仅在自己的包中能访问
- * 4、private：仅在自己的类中能访问
- * 那我们编写了这么一个整型动态数组，当然是希望在项目里的所有包中都能访问，所以这个类应该定义成public的
- * 同时这个类里面的方法我们也是希望在项目里的所有包中都能访问，所以也应该定义成public的
- * 然后从封装的角度考虑，属性都应该搞成私有的，然后根据需要向外界暴露该私有属性的setter和getter方法
+ * 1、唯一报错的地方就是初始化基本数组的时候E[] newElements = new E[newCapacity];，因为E不是个具体的类型，
+ * 所以语法不支持直接这么写，那我们就绕一下，因为Java里所有的类都继承自Object，既然我们的动态数组里面就是放引用
+ * 类型，那创建一个Object数组不就完事了嘛，然后再强转成泛型的那个类型：E[] newElements = (E[]) new Object[newCapacity];
+ *
+ * 2、关于数组里能不能存储null的设计：Java官方的动态数组里设计能存储null，OC官方的数组里设计不能存储nil或者null，
+ * Java里null调用方法会崩溃，OC里给nil或者null发送消息是不会崩溃的
  * 
  * @author yiyi
  *
+ * @param <E>
  */
-public class _02IntegerArrayList {
+public class _03EArrayList<E> {
 	/**
 	 * 1、Java里总是先有类才有其它东西，也就说所有的东西都必须定义在类内部
 	 * 比方说这个类内部使用的私有常量，在其它语言里我们也许可以定义在这个文件的
@@ -44,18 +43,19 @@ public class _02IntegerArrayList {
 	 * 
 	 * 动态数组用基本数组实现
 	 */
-	private Integer[] elements;
+	private E[] elements;
 	
 	/**
 	 * 我们提供一个带参的构造方法，以便外界在创建动态数组时想主动设置初始容量，这个方法
 	 * 就是这个类的万能构造方法
 	 * @param capacity
 	 */
-	public _02IntegerArrayList(int capacity) {
+	@SuppressWarnings("unchecked")
+	public _03EArrayList(int capacity) {
 		if (capacity < DEFAULT_CAPACITY) {
 			capacity = DEFAULT_CAPACITY;
 		}
-		elements = new Integer[DEFAULT_CAPACITY];
+		elements = (E[]) new Object[DEFAULT_CAPACITY];
 	}
 	
 	/**
@@ -63,7 +63,7 @@ public class _02IntegerArrayList {
 	 * 再提供一个无参构造方法供外界使用，外界也许不关心什么容量不容量问题呢，就像我们平常
 	 * 使用数组的时候那样，只不过默认容量给个10，调用一下全能构造方法即可
 	 */
-	public _02IntegerArrayList() {
+	public _03EArrayList() {
 		this(DEFAULT_CAPACITY);
 	}
 	
@@ -71,8 +71,10 @@ public class _02IntegerArrayList {
 	 * 添加元素到最后面
 	 * @param element
 	 */
-	public void add(Integer element) {
-		/* 
+	public void add(E element) {
+		/*
+		 * 暂时不考虑数组扩容问题
+		 * 
 		 * 这两行代码虽然能实现效果，但从代码复用的角度考虑
 		 * 方法重载的若干方法之间，参数少的那个方法可以通过调用参数多的那个方法来实现
 		 */
@@ -90,12 +92,12 @@ public class _02IntegerArrayList {
 	 * @param index
 	 * @param element
 	 */
-	public void add(int index, Integer element) {
+	public void add(int index, E element) {
 		rangeCheckForAdd(index);
 		// 当前数组的长度为size，所以我们每次添加元素时，只需要确保数组容量比当前长度大1，能放进去新元素就行
 		ensureCapacity(size + 1);
 		
-		/*
+		/* 
 		 * 添加元素到指定的位置其实就是把index到size - 1这几个元素依次往后移动一位
 		 * 然后再把element放到index的位置
 		 * 
@@ -112,7 +114,7 @@ public class _02IntegerArrayList {
 	 * 删除一个元素，第一个匹配到
 	 * @param element
 	 */
-	public void remove(Integer element) {
+	public void remove(E element) {
 		/*
 		 * 删除一个元素其实就是把这个元素的index + 1到size - 1这几个元素依次往前移动一位，
 		 * 让index + 1这个元素覆盖掉这个元素就可以了
@@ -137,13 +139,13 @@ public class _02IntegerArrayList {
 	 * @param index
 	 * @return 删除掉的元素
 	 */
-	public Integer remove(int index) {
+	public E remove(int index) {
 		rangeCheck(index);
 		
 		/*
 		 * 思路见void remove(Integer element)这个方法里的描述
 		 */
-		Integer old = elements[index];
+		E old = elements[index];
 		for (int i = index; i < size - 1; i++) {
 			elements[i] = elements[i + 1];
 		}
@@ -157,14 +159,14 @@ public class _02IntegerArrayList {
 	 * @param element
 	 * @return 修改前的元素
 	 */
-	public Integer set(int index, Integer element) {
+	public E set(int index, E element) {
 		rangeCheck(index);
 		
 		/*
 		 * 基本数组可以通过index直接覆盖掉指定位置的元素，
 		 * 所以直接根据index修改就可以了
 		 */
-		Integer old = elements[index];
+		E old = elements[index];
 		elements[index] = element;
 		return old;
 	};
@@ -174,7 +176,7 @@ public class _02IntegerArrayList {
 	 * @param index
 	 * @return
 	 */
-	public Integer get(int index) {
+	public E get(int index) {
 		rangeCheck(index);
 		
 		/*
@@ -197,7 +199,7 @@ public class _02IntegerArrayList {
 	 * @param element
 	 * @return
 	 */
-	public int indexOf(Integer element) {
+	public int indexOf(E element) {
 		for (int i = 0; i < size; i++) {
 			if (elements[i] == element) {
 				return i;
@@ -241,7 +243,7 @@ public class _02IntegerArrayList {
 	 * @param element
 	 * @return
 	 */
-	public boolean contains(Integer element) {
+	public boolean contains(E element) {
 		return indexOf(element) != ELEMENT_NOT_FOUND;
 	};
 	
@@ -282,6 +284,7 @@ public class _02IntegerArrayList {
 	 * 的扩容比例是1.6等，它们都是按比例扩容的，我们也可以参考这种做法，而不要每次扩容加一个数，这样扩容肯定会
 	 * 很频繁，浪费时间
 	 */
+	@SuppressWarnings("unchecked")
 	private void ensureCapacity(int capacity) {
 		int oldCapacity = elements.length;
 		if (oldCapacity >= capacity) { // 如果容量够用，则什么都不做
@@ -296,7 +299,7 @@ public class _02IntegerArrayList {
 //		double newCapacity = oldCapacity * 1.5;
 		int newCapacity = oldCapacity + (oldCapacity >> 1);
 		// 开辟大基本数组
-		Integer[] newElements = new Integer[newCapacity];
+		E[] newElements = (E[]) new Object[newCapacity];
 		// 一个一个移动元素
 		for (int i = 0; i < size; i++) {
 			newElements[i] = elements[i];
@@ -318,7 +321,7 @@ public class _02IntegerArrayList {
 		sb.append("size = " + size + ", ");
 		sb.append("elements = [\n");
 		for (int i = 0; i < size; i++) {
-			Integer temp = elements[i];
+			E temp = elements[i];
 			sb.append("  ");
 			sb.append(temp);
 			sb.append(",\n");

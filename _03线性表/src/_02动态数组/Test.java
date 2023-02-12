@@ -2,6 +2,11 @@ package _02动态数组;
 
 public class Test {
 	public static void main(String[] args) {
+//		testIntegerArrayList();
+		testEArrayList();
+	}
+	
+	public static void testIntegerArrayList() {
 		_02IntegerArrayList arrayList2 = new _02IntegerArrayList();
 		arrayList2.add(11);
 		arrayList2.add(22);
@@ -31,5 +36,23 @@ public class Test {
 		arrayList2.add(888);
 		arrayList2.add(999);
 		System.out.println(arrayList2);
+	}
+	
+	public static void testEArrayList() {
+		_03EArrayList<Integer> arrayList2 = new _03EArrayList<Integer>();
+		arrayList2.add(11);
+		arrayList2.add(22);
+		arrayList2.add(33);
+		arrayList2.add(44);
+		arrayList2.add(55);
+		arrayList2.add(66);
+		System.out.println(arrayList2);
+
+		_03EArrayList<String> arrayList1 = new _03EArrayList<>();
+		arrayList1.add("Jack");
+		arrayList1.add("Rose");
+		arrayList1.add("Zhangsan");
+		arrayList1.add("Lisi");
+		System.out.println(arrayList1);
 	}
 }
