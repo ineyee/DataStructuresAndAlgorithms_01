@@ -93,9 +93,7 @@ public class _02IntegerArrayList {
 	 * @param element
 	 */
 	public void add(int index, Integer element) {
-		if (index < 0 || index >= size) {
-			throw new IndexOutOfBoundsException("index: " + index + ", size: " + size);
-		}
+		rangeCheckForAdd(index);
 		
 		/*
 		 * 暂时不考虑扩容问题
@@ -105,8 +103,8 @@ public class _02IntegerArrayList {
 		 * 
 		 * 但是这个操作得从尾部往前面倒着来移，不然后面的元素可能被覆盖掉
 		 */
-		for (int i = size - 1; i <= index; i--) {
-			elements[i - 1] = elements[i];
+		for (int i = size; i > index; i--) {
+			elements[i] = elements[i - 1];
 		}
 		elements[index] = element;
 		size++;
@@ -121,10 +119,10 @@ public class _02IntegerArrayList {
 		 * 删除一个元素其实就是把这个元素的index + 1到size - 1这几个元素依次往前移动一位，
 		 * 让index + 1这个元素覆盖掉这个元素就可以了
 		 * 
-		 * 至于移动后最后一个元素肯定还保留的是原来的值，那我们需不需要把它置为null呢？可以但没必要，
+		 * 至于移动后最后一个元素肯定还保留的是原来的值，那我们需不需要把它置为0或者null呢？可以但没必要，
 		 * 因为所有的元素前移后，我们肯定会让size--，那外界其实就访问不到那个保留原来值的最后一个元素了，
-		 * 所以那块内存保留原来的数据也不会出现数据错乱，如果我们把这块内存置为null，反而增加了对内存的操作，
-		 * 性能上反而会下降，还不如放着不管它
+		 * 所以那块内存保留原来的数据也不会出现数据错乱，如果我们把这块内存置为0或者null，反而增加了对内存的操作，
+		 * 时间上反而会浪费，还不如放着不管它
 		 * 
 		 * 有了这个思路，我们发现得首先找到这个元素所在的index，然后再做操作，所以这个好像转化为了对
 		 * int indexOf(Integer element)和Integer remove(int index)这两个方法的调用了
@@ -142,16 +140,14 @@ public class _02IntegerArrayList {
 	 * @return 删除掉的元素
 	 */
 	public Integer remove(int index) {
-		if (index < 0 || index >= size) {
-			throw new IndexOutOfBoundsException("index: " + index + ", size: " + size);
-		}
+		rangeCheck(index);
 		
 		/*
 		 * 思路见void remove(Integer element)这个方法里的描述
 		 */
 		Integer old = elements[index];
 		for (int i = index; i < size - 1; i++) {
-			elements[index] = elements[index + 1];
+			elements[i] = elements[i + 1];
 		}
 		size--;
 		return old;
@@ -164,9 +160,7 @@ public class _02IntegerArrayList {
 	 * @return 修改前的元素
 	 */
 	public Integer set(int index, Integer element) {
-		if (index < 0 || index >= size) {
-			throw new IndexOutOfBoundsException("index: " + index + ", size: " + size);
-		}
+		rangeCheck(index);
 		
 		/*
 		 * 基本数组可以通过index直接覆盖掉指定位置的元素，
@@ -183,9 +177,7 @@ public class _02IntegerArrayList {
 	 * @return
 	 */
 	public Integer get(int index) {
-		if (index < 0 || index >= size) {
-			throw new IndexOutOfBoundsException("index: " + index + ", size: " + size);
-		}
+		rangeCheck(index);
 		
 		/*
 		 * 基本数组可以通过index直接获取指定位置的元素，
@@ -221,7 +213,19 @@ public class _02IntegerArrayList {
 	 */
 	public void clear() {
 		/*
-		 * 直接把size赋值成0就可以了，虽然浪费了点内存空间，但是省了频繁操作内存的时间
+		 * 说到清空数组，我们首先想到的可能是：把elements数组 = {}搞成一个空数组，或者把elements数组 = null搞成null，
+		 * 这么做的确没问题，但是用户在清空数组后很可能还是要使用这个动态数组add东西的，所以这个时候上面两种做法都得再次在
+		 * 堆区开辟新的内存，而这种反复申请内存和销毁内存的操作是浪费时间的，所以我们还不如保留这段内存，以免用户后面可能还
+		 * 会用到，就像一开始我们初始化数组的时候就开辟了10个容量的内存空间空着一样。其实我们只需要直接把size赋值成0就可以
+		 * 了，这么做虽然浪费了点内存空间，但是省了频繁操作堆内存的时间，这也是用空间换时间的一个应用。
+		 * 
+		 * 那至于这个基本数组的内存空间什么时候真得会销毁，这很好理解，当然就是外界创建的动态数组对象销毁的时候，这个动态数组对象
+		 * 的elements属性就不会再指向那块内存空间了，那块内存空间也就随之销毁，这也刚好表明只要外界的动态数组对象还存在，就代表
+		 * 外界使用者确实还有可能使用这块内存空间，那我们的确最好不要销毁它、然后再开辟。
+		 * 
+		 * 再者你可能会担心直接这么写，外界使用我们的动态数组时逻辑上不会出现问题吗？不会的，只要size = 0，
+		 * 即便我们的动态数组底层对应的基本数组里还存储着一堆数据，但是对外界用户来说，他们使用我们的其它API来操作动态数组时，
+		 * 我们那些API里面都做了index和size的范围检测，也就是说他们使用动态数组是访问不到任何数据的，他们会感觉到是数组真得清空了。
 		 */
 		size = 0;
 	};
@@ -242,6 +246,52 @@ public class _02IntegerArrayList {
 	public boolean contains(Integer element) {
 		return indexOf(element) != ELEMENT_NOT_FOUND;
 	};
+	
+	/**
+	 * 因为上面有很多地方都编写了检查数据是否越界的代码，所以这里抽取一下
+	 */
+	private void rangeCheck(int index) {
+		if (index < 0 || index >= size) {
+			outOfBoundsException(index, size);
+		}
+	}
+	
+	/**
+	 * add的地方稍有不同，因为我们允许往size也就是数组的尾部添加元素，所以单独写一个
+	 */
+	private void rangeCheckForAdd(int index) {
+		if (index < 0 || index > size) {
+			outOfBoundsException(index, size);
+		}
+	}
+	
+	/**
+	 * 又因为两个rangeCheck都写到了这个重复的代码，所以抽一下
+	 */
+	private void outOfBoundsException(int index, int size) {
+		throw new IndexOutOfBoundsException("index: " + index + ", size: " + size);
+	}
+	
+	@Override
+	public String toString() {
+		/*
+		 * Java里打印一个对象其实就是在调用这个对象的toString方法，就像OC
+		 * 里的description方法一样，我们可以重写toString方法来自定义怎么
+		 * 打印这个对象
+		 */
+		StringBuilder sb = new StringBuilder(); 
+		sb.append("size = " + size + ", ");
+		sb.append("elements = [\n");
+		for (int i = 0; i < size; i++) {
+			Integer temp = elements[i];
+			sb.append("  ");
+			sb.append(temp);
+			sb.append(",\n");
+		}
+		sb.append("]");
+		
+		return sb.toString();
+	}
 }
 
 /*
