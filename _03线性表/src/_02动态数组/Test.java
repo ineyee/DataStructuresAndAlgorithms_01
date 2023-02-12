@@ -20,5 +20,16 @@ public class Test {
 		System.out.println(arrayList2);
 		
 		System.out.println(arrayList2.get(1));
+		
+		arrayList2.add(111);
+		arrayList2.add(222);
+		arrayList2.add(333);
+		arrayList2.add(444);
+		arrayList2.add(555);
+		arrayList2.add(666);
+		arrayList2.add(777);
+		arrayList2.add(888);
+		arrayList2.add(999);
+		System.out.println(arrayList2);
 	}
 }

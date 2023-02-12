@@ -94,6 +94,8 @@ public class _02IntegerArrayList {
 	 */
 	public void add(int index, Integer element) {
 		rangeCheckForAdd(index);
+		// 当前数组的长度为size，所以我们每次添加元素时，只需要确保数组容量比当前长度大1，能放进去新元素就行
+		ensureCapacity(size + 1);
 		
 		/*
 		 * 暂时不考虑扩容问题
@@ -270,6 +272,43 @@ public class _02IntegerArrayList {
 	 */
 	private void outOfBoundsException(int index, int size) {
 		throw new IndexOutOfBoundsException("index: " + index + ", size: " + size);
+	}
+	
+	/**
+	 * 确保动态数组最少有capacity的容量
+	 * 
+	 * 因为基本数组在初始化时指定容量后就不可变了，所以当外界使用我们的动态数组一直add时就有可能出现数组容量
+	 * 不够的情况，因此我们需要对数组进行扩容，扩容的地方当然就是add里，因为只有这个操作才有可能导致容量不够
+	 * 
+	 * 扩容的思路其实很简单，那就是开辟一个容量更大的基本数组，然后把旧基本数组里的元素一个一个地搬到这个大基本
+	 * 数组里即可，同时由于我们会把elements属性指向这个大基本数组，这样之前的小基本数组就没人指向、它的内存就能
+	 * 销毁掉了。至于大基本数组的容量你要搞成多少，这个看你自己的设计，例如Java官方的扩容比例是1.5，而OC官方
+	 * 的扩容比例是1.6等，它们都是按比例扩容的，我们也可以参考这种做法，而不要每次扩容加一个数，这样扩容肯定会
+	 * 很频繁，浪费时间
+	 */
+	private void ensureCapacity(int capacity) {
+		int oldCapacity = elements.length;
+		if (oldCapacity >= capacity) { // 如果容量够用，则什么都不做
+			return;
+		}
+		
+		/*
+		 * 如果容量不够用，则把容量扩容为原来的1.5倍，但是这里最好不要用乘以1.5来做，因为：
+		 * 1、new int[capacity]这个地方的capacity只能是个整数，所以要是乘以1.5结果是个double，不能直接放进去
+		 * 2、乘法运算远不如位运算和加法运算的效率高，一个数右移一位就是除以2
+		 */
+//		double newCapacity = oldCapacity * 1.5;
+		int newCapacity = oldCapacity + (oldCapacity >> 1);
+		// 开辟大基本数组
+		Integer[] newElements = new Integer[newCapacity];
+		// 一个一个移动元素
+		for (int i = 0; i < size; i++) {
+			newElements[i] = elements[i];
+		}
+		// elements指向大基本数组，保大基本数据的命，同时消耗小基本数组
+		elements = newElements;
+		
+		System.out.println("动态数组库容了，扩容前容量：" + oldCapacity + "，扩容后容量：" + newCapacity);
 	}
 	
 	@Override
